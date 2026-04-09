@@ -246,7 +246,7 @@
   flex-direction: column;
   max-width: 720px;
   width: 100%;
-  background: rgba(var(--bg-calendar-rgb), 0.85);
+  background: rgba(var(--bg-calendar-rgb), 0.75);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   border-radius: 0 0 var(--radius-lg) var(--radius-lg);
