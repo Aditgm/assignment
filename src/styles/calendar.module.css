@@ -1,0 +1,1766 @@
+.calendarWrapper {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  padding: 40px 24px;
+  background: var(--bg-primary);
+  perspective: 1200px;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  --atmo-opacity: 0.24;
+}
+
+.monthBackdrop {
+  position: absolute;
+  inset: -5%;
+  background-image: var(--month-bg-image);
+  background-size: cover;
+  background-position: center;
+  filter: saturate(1.1) brightness(0.95);
+  transform: scale(1.05);
+  opacity: 1;
+  z-index: 0;
+}
+
+.monthBackdrop::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.monthTransitionMask {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  z-index: 240;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: saturate(1.06) contrast(1.03);
+}
+
+.monthTransitionMask::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 28% 22%, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0) 48%),
+    linear-gradient(160deg, rgba(255, 255, 255, 0.08), rgba(12, 24, 44, 0.1));
+  mix-blend-mode: screen;
+}
+
+[data-theme="dark"] .monthTransitionMask::after {
+  background:
+    radial-gradient(circle at 28% 22%, rgba(156, 197, 255, 0.12), rgba(156, 197, 255, 0) 45%),
+    linear-gradient(160deg, rgba(10, 20, 34, 0.28), rgba(8, 14, 24, 0.52));
+  mix-blend-mode: normal;
+}
+
+[data-theme="dark"] .monthBackdrop::after {
+  background: rgba(11, 12, 20, 0.55);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+
+.atmosphereLayer {
+  position: absolute;
+  inset: -6%;
+  z-index: 0;
+  pointer-events: none;
+  opacity: var(--atmo-opacity);
+  mix-blend-mode: multiply;
+  animation: atmosphereShift 24s ease-in-out infinite alternate;
+}
+
+.atmosphereLayer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.atmosphereWinter .atmosphereLayer {
+  background:
+    linear-gradient(118deg, rgba(155, 177, 201, 0.7), rgba(207, 219, 234, 0.42), rgba(133, 153, 173, 0.6)),
+    radial-gradient(circle at 18% 22%, rgba(239, 246, 255, 0.72), transparent 44%);
+  filter: blur(10px);
+}
+
+.atmosphereSummer .atmosphereLayer {
+  background:
+    radial-gradient(circle at 50% 14%, rgba(255, 182, 88, 0.72), rgba(255, 138, 61, 0.24) 42%, transparent 66%),
+    linear-gradient(145deg, rgba(255, 212, 145, 0.5), rgba(252, 158, 73, 0.34), rgba(255, 232, 196, 0.32));
+}
+
+.atmosphereMonsoon .atmosphereLayer {
+  background:
+    linear-gradient(134deg, rgba(103, 136, 168, 0.62), rgba(167, 192, 216, 0.35), rgba(112, 131, 156, 0.54)),
+    radial-gradient(circle at 64% 20%, rgba(220, 234, 246, 0.4), transparent 56%);
+}
+
+.atmosphereMonsoon .atmosphereLayer::after {
+  background-image:
+    radial-gradient(circle at 18% 26%, rgba(255, 255, 255, 0.14) 0 2px, transparent 3px),
+    radial-gradient(circle at 72% 36%, rgba(255, 255, 255, 0.11) 0 1.5px, transparent 2.5px),
+    radial-gradient(circle at 42% 72%, rgba(255, 255, 255, 0.08) 0 2px, transparent 3px);
+  background-size: 120px 120px, 140px 140px, 160px 160px;
+  opacity: 0.5;
+}
+
+.atmosphereMild .atmosphereLayer {
+  background:
+    linear-gradient(136deg, rgba(196, 169, 131, 0.34), rgba(238, 223, 198, 0.3), rgba(170, 148, 118, 0.28)),
+    radial-gradient(circle at 24% 18%, rgba(255, 247, 232, 0.42), transparent 50%);
+}
+
+.timeMorning {
+  --atmo-opacity: 0.26;
+  --today-orb-color: #fcd34d;
+}
+
+.timeAfternoon {
+  --atmo-opacity: 0.2;
+  --today-orb-color: var(--today-ring);
+}
+
+.timeNight {
+  --atmo-opacity: 0.38;
+  --today-orb-color: #fbbf24;
+}
+
+.timeNight .monthBackdrop {
+  opacity: 0.29;
+  filter: blur(24px) saturate(1.05) brightness(0.86);
+}
+
+.timeNight .calendarBody {
+  box-shadow: 0 16px 52px rgba(3, 8, 21, 0.62);
+}
+
+@keyframes atmosphereShift {
+  0% {
+    transform: translate3d(-1.5%, -1%, 0) rotate(0deg) scale(1.02);
+  }
+  100% {
+    transform: translate3d(1.5%, 1%, 0) rotate(8deg) scale(1.06);
+  }
+}
+
+.outerParticles {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.particleCanvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.particle {
+  --particle-drift: 18px;
+  position: absolute;
+  top: -10%;
+  border-radius: 50%;
+  animation-name: particleFall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+.particleSnow {
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 1), rgba(217, 236, 255, 0.65));
+  box-shadow: 0 0 8px rgba(226, 241, 255, 0.62);
+}
+
+.particleYellow {
+  border-radius: 40% 60% 50% 50%;
+  background: radial-gradient(circle at 35% 35%, rgba(255, 226, 120, 0.95), rgba(255, 190, 45, 0.65));
+  box-shadow: 0 0 10px rgba(255, 202, 78, 0.45);
+}
+
+.particleLeaves {
+  border-radius: 62% 22% 60% 24%;
+  background: linear-gradient(145deg, #f59e0b, #b45309);
+  transform: rotate(20deg);
+  box-shadow: 0 2px 5px rgba(120, 53, 15, 0.35);
+}
+
+.particleRain {
+  border-radius: 999px;
+  width: 2px;
+  height: 14px;
+  background: linear-gradient(180deg, rgba(202, 233, 255, 0.95), rgba(117, 185, 233, 0.55));
+  box-shadow: 0 0 6px rgba(180, 222, 255, 0.45);
+}
+
+.particleDroplets {
+  border-radius: 58% 58% 58% 58% / 72% 72% 38% 38%;
+  background: radial-gradient(circle at 35% 28%, rgba(236, 251, 255, 0.95), rgba(118, 196, 255, 0.92) 48%, rgba(23, 122, 208, 0.68) 100%);
+  box-shadow: 0 0 10px rgba(112, 191, 255, 0.45);
+}
+
+.particleStar {
+  border-radius: 50%;
+  background: radial-gradient(circle at 36% 34%, rgba(255, 255, 255, 0.98), rgba(176, 214, 255, 0.75));
+  top: auto;
+  animation-name: starTwinkle;
+  box-shadow: 0 0 8px rgba(188, 226, 255, 0.6);
+}
+
+@keyframes starTwinkle {
+  0%, 100% {
+    opacity: 0.28;
+    transform: scale(0.85);
+  }
+  50% {
+    opacity: 0.95;
+    transform: scale(1.18);
+  }
+}
+
+@keyframes particleFall {
+  0% {
+    transform: translate3d(0, -8%, 0) rotate(0deg);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.95;
+  }
+  100% {
+    transform: translate3d(var(--particle-drift), 115vh, 0) rotate(320deg);
+    opacity: 0;
+  }
+}
+
+.calendarBody {
+  display: flex;
+  flex-direction: column;
+  max-width: 720px;
+  width: 100%;
+  background: rgba(var(--bg-calendar-rgb), 0.55);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  box-shadow:
+    var(--shadow-xl),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.4),
+    0 24px 80px -20px var(--month-accent-shadow, rgba(14, 165, 233, 0.2));
+  overflow: hidden;
+  position: relative;
+  transform-style: preserve-3d;
+  z-index: 2;
+  margin-top: 24px;
+}
+
+.calendarBody::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 100;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='paperGrain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23paperGrain)'/%3E%3C/svg%3E");
+}
+
+[data-theme="dark"] .calendarBody::before {
+  opacity: 0.06;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='linenTexture'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.45' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23linenTexture)'/%3E%3C/svg%3E");
+}
+
+.calendarHanger {
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 46px;
+  z-index: 20;
+  pointer-events: auto;
+}
+
+.hangerShadow {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 60px;
+  height: 28px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.18);
+  filter: blur(8px);
+}
+
+.hangerRing {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 50px;
+  height: 30px;
+  transform: translateX(-50%);
+  border: 5px solid #8f979f;
+  border-bottom: none;
+  border-radius: 28px 28px 0 0;
+  background: linear-gradient(180deg, rgba(229, 234, 238, 0.75), rgba(152, 161, 170, 0.45));
+}
+
+.hangerPin {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  width: 14px;
+  height: 14px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #f5f6f7, #7a848f 75%);
+  box-shadow: inset 0 0 0 1px rgba(30, 41, 59, 0.25), 0 2px 6px rgba(0, 0, 0, 0.3);
+  border: none;
+  cursor: pointer;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.hangerPin:hover {
+  transform: translateX(-50%) scale(1.08);
+  box-shadow: inset 0 0 0 1px rgba(30, 41, 59, 0.25), 0 4px 10px rgba(0, 0, 0, 0.35);
+}
+
+.hangerPin:active {
+  transform: translateX(-50%) scale(0.95);
+}
+
+.calendarSwing {
+  transform-origin: 50% 0;
+  animation: calendarSwing 1.25s cubic-bezier(0.25, 0.7, 0.2, 1);
+}
+
+@keyframes calendarSwing {
+  0% { transform: rotate(0deg); }
+  20% { transform: rotate(6deg); }
+  40% { transform: rotate(-5deg); }
+  58% { transform: rotate(3.8deg); }
+  76% { transform: rotate(-2.4deg); }
+  100% { transform: rotate(0deg); }
+}
+.spiralBinding {
+  position: relative;
+  width: 100%;
+  height: 28px;
+  background: linear-gradient(180deg, #e8e8e8 0%, #d0d0d0 50%, #e8e8e8 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  z-index: 10;
+  perspective: 640px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="dark"] .spiralBinding {
+  background: linear-gradient(180deg, #3a3a4a 0%, #2a2a3a 50%, #3a3a4a 100%);
+}
+
+.spiralLoop {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(141, 147, 155, 0.9);
+  border-radius: 50%;
+  background: radial-gradient(circle at 28% 26%, #f0f4f8 0%, #bec7cf 40%, #8f98a2 78%, #6f7680 100%);
+  position: relative;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.28),
+    inset -2px -2px 3px rgba(53, 59, 66, 0.35),
+    0 2px 2px rgba(0, 0, 0, 0.14);
+  transform-style: preserve-3d;
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+.spiralLoop::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: -3px;
+  right: -3px;
+  height: 3px;
+  background: linear-gradient(180deg, #fafcff, #a4adb7);
+  transform: translateY(-50%);
+  border-radius: 2px;
+}
+
+.spiralLoop::before {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 4px;
+  width: 7px;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.62);
+}
+
+[data-theme="dark"] .spiralLoop {
+  border-color: rgba(96, 103, 112, 0.95);
+  background: radial-gradient(circle at 28% 26%, #8e98a3 0%, #656d78 40%, #444b56 78%, #2a2f38 100%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12),
+    inset -2px -2px 3px rgba(8, 10, 13, 0.55),
+    0 2px 3px rgba(0, 0, 0, 0.32);
+}
+
+[data-theme="dark"] .spiralLoop::after {
+  background: linear-gradient(180deg, #bac4cf, #616b76);
+}
+.heroSection {
+  position: relative;
+  width: 100%;
+  height: 360px;
+  overflow: hidden;
+  cursor: grab;
+}
+
+.heroSection:active {
+  cursor: grabbing;
+}
+
+.heroImageContainer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.heroColorPlaceholder {
+  position: absolute;
+  inset: 0;
+  background: var(--hero-placeholder);
+  opacity: 0;
+  transition: opacity 320ms ease;
+}
+
+.heroLiquidCanvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 320ms ease;
+}
+
+.heroLiquidCanvas :global(canvas) {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+
+.heroImageFallback {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  transform: scale(1.04);
+  opacity: 0;
+  transition: opacity 320ms ease;
+}
+
+.heroImage {
+  width: 110%;
+  height: 110%;
+  object-fit: cover;
+  object-position: center;
+  position: absolute;
+  top: -5%;
+  left: -5%;
+  transform-origin: center top;
+  will-change: transform;
+  transition: opacity 320ms ease;
+  opacity: 0;
+}
+
+.heroImageBlur {
+  filter: blur(20px) saturate(1.08);
+  transform: scale(1.08);
+}
+
+.heroImageMain {
+  filter: blur(0px);
+}
+
+.heroVisible {
+  opacity: 1;
+}
+
+.heroExploreText {
+  position: absolute;
+  z-index: 12;
+  pointer-events: none;
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: white;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+}
+
+.heroExploreText::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -8px;
+  transform: translateX(-50%);
+  width: 24px;
+  height: 2px;
+  background: var(--accent);
+  border-radius: 1px;
+}
+
+.heroOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    transparent 30%,
+    rgba(0, 0, 0, 0.05) 60%,
+    rgba(0, 0, 0, 0.25) 100%
+  );
+  z-index: 1;
+}
+
+.heroOverlayMorning {
+  background:
+    radial-gradient(circle at 64% 18%, rgba(255, 206, 137, 0.34), transparent 40%),
+    linear-gradient(180deg, rgba(255, 198, 112, 0.02), rgba(0, 0, 0, 0.2));
+}
+
+.heroOverlayAfternoon {
+  background:
+    linear-gradient(180deg, transparent 30%, rgba(0, 0, 0, 0.05) 60%, rgba(0, 0, 0, 0.25) 100%);
+}
+
+.heroOverlayNight {
+  background:
+    radial-gradient(circle at 30% 20%, rgba(105, 136, 192, 0.22), transparent 44%),
+    linear-gradient(180deg, rgba(10, 22, 42, 0.12), rgba(5, 13, 28, 0.62));
+}
+
+.heroWave {
+  position: absolute;
+  bottom: 26px;
+  left: 0;
+  width: 100%;
+  height: 96px;
+  display: block;
+  z-index: 3;
+  will-change: transform;
+}
+
+.heroWavePath {
+  transition: fill var(--transition-smooth);
+}
+
+.heroBottomFill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 42px;
+  background: var(--bg-calendar);
+  z-index: 2;
+}
+
+.heroMonthLabel {
+  position: absolute;
+  bottom: 60px;
+  right: 48px;
+  z-index: 4;
+  text-align: right;
+  will-change: transform;
+}
+
+.heroYear {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: white;
+  text-shadow: 0 4px 16px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(0, 0, 0, 0.3);
+  letter-spacing: 12px;
+  opacity: 0.95;
+  display: block;
+  margin-bottom: -4px;
+}
+
+[data-theme="dark"] .heroYear {
+  color: white;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.7), 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.heroMonthName {
+  font-family: var(--font-display);
+  font-size: clamp(5.0rem, 10.0vw, 6.0rem);
+  font-weight: 900;
+  color: white;
+  text-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 2px 4px rgba(0, 0, 0, 0.3);
+  letter-spacing: -2px;
+  text-transform: uppercase;
+  line-height: 0.85;
+  transition: all 400ms cubic-bezier(0.25, 1, 0.5, 1);
+  display: flex;
+  justify-content: flex-end;
+}
+
+[data-theme="dark"] .heroMonthName {
+  text-shadow: 0 12px 40px rgba(0, 0, 0, 0.7), 0 2px 6px rgba(0, 0, 0, 0.5);
+}
+
+.heroSection:hover .heroMonthName {
+  color: transparent;
+  -webkit-text-stroke: 1.5px rgba(255, 255, 255, 0.95);
+  text-shadow: none;
+}
+.contentArea {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  min-height: 360px;
+  position: relative;
+  transform-style: preserve-3d;
+  will-change: transform;
+  --flip-shadow-opacity: 0;
+  --flip-shadow-x: 0px;
+  --flip-shadow-blur: 18px;
+}
+
+.contentArea::before {
+  content: '';
+  position: absolute;
+  inset: 8px 12px 10px;
+  border-radius: 18px;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 1;
+  box-shadow:
+    var(--flip-shadow-x) 26px var(--flip-shadow-blur) rgba(15, 23, 42, var(--flip-shadow-opacity)),
+    calc(var(--flip-shadow-x) * -0.5) 10px calc(var(--flip-shadow-blur) * 0.75) rgba(15, 23, 42, calc(var(--flip-shadow-opacity) * 0.6));
+  transform: translateZ(-8px);
+}
+
+.contentArea > * {
+  position: relative;
+  z-index: 2;
+}
+
+.contentArea::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  transform: translateX(-50%);
+  box-shadow: 
+    -8px 0 12px -8px rgba(0, 0, 0, 0.06),
+    8px 0 12px -8px rgba(0, 0, 0, 0.06);
+  pointer-events: none;
+  z-index: 10;
+}
+
+[data-theme="dark"] .contentArea::after {
+  box-shadow: 
+    -8px 0 16px -8px rgba(0, 0, 0, 0.25),
+    8px 0 16px -8px rgba(0, 0, 0, 0.25);
+}
+.notesPanel {
+  padding: 20px 16px;
+  border-right: 1px solid var(--border);
+  background: var(--bg-notes);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+}
+
+.notesTitle {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+  letter-spacing: 0.5px;
+}
+
+.notesTextarea {
+  flex: 1;
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  line-height: 1.75;
+  color: var(--text-secondary);
+  resize: none;
+  caret-color: transparent;
+  position: relative;
+  background-image: 
+    linear-gradient(to right, #dc2626 0px, #dc2626 1px, transparent 1px, transparent 32px),
+    repeating-linear-gradient(
+    transparent,
+    transparent 22px,
+    var(--border) 22px,
+    var(--border) 23px
+  );
+  background-size: 100% 100%, 100% 23px;
+  background-position: 0 0, 0 4px;
+  padding: 4px 0 4px 40px;
+}
+
+.notesTextarea:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--accent);
+  border-radius: var(--radius-sm);
+}
+
+.notesTextareaContainer {
+  position: relative;
+  flex: 1;
+}
+
+.typewriterCursor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 2px;
+  height: 1.2em;
+  background: #111827;
+  animation: typewriterBlink 1.1s step-end infinite;
+  pointer-events: none;
+  z-index: 10;
+}
+
+@keyframes typewriterBlink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+.pencilIcon {
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: all 0.2s ease;
+  pointer-events: none;
+}
+
+.notesTextareaContainer.typing .pencilIcon {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.notesCaretMirror {
+  position: absolute;
+  top: 0;
+  left: 0;
+  visibility: hidden;
+  pointer-events: none;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.notesTextarea::placeholder {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.notesCharCount {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  text-align: right;
+  margin-top: 4px;
+}
+
+.notesRangeLabel {
+  font-size: 0.7rem;
+  color: var(--accent);
+  padding: 4px 8px;
+  background: var(--accent-light);
+  border-radius: var(--radius-sm);
+  margin-bottom: 4px;
+  font-weight: 500;
+}
+.calendarSection {
+  padding: 16px 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.weekdayHeader {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  margin-bottom: 4px;
+}
+
+.weekdayCell {
+  text-align: center;
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  padding: 6px 0;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.weekdayCell.weekendHeader {
+  color: var(--weekend-color);
+}
+
+.daysGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.dayCellSkeleton {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: linear-gradient(115deg, rgba(148, 163, 184, 0.12), rgba(148, 163, 184, 0.05));
+}
+
+.dayCellShimmer {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 0%, rgba(255, 255, 255, 0.5) 42%, transparent 70%);
+  transform: translateX(-100%);
+  animation: dayShimmer 1.1s ease-in-out infinite;
+}
+
+@keyframes dayShimmer {
+  100% {
+    transform: translateX(120%);
+  }
+}
+.dayCell {
+  position: relative;
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  transition: all 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  will-change: transform, box-shadow;
+}
+
+.dayCell:hover {
+  background: var(--accent-light);
+  transform: translateY(-2px);
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.08),
+    0 0 0 2px var(--accent-light);
+}
+
+.dayCell:hover .dayNumber {
+  transform: scale(1.05);
+}
+
+.dayCell.otherMonth {
+  color: var(--text-muted);
+  opacity: 0.4;
+}
+
+.dayCell.otherMonth:hover {
+  opacity: 0.6;
+}
+
+.dayCell.weekend {
+  color: var(--weekend-color);
+}
+
+.dayCell.today {
+  font-weight: 700;
+  background: radial-gradient(circle at center, var(--accent-light) 0%, transparent 70%);
+}
+
+.dayCell.today::before,
+.dayCell.today::after {
+  content: '';
+  position: absolute;
+  bottom: 3px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--today-orb-color, var(--today-ring));
+  box-shadow:
+    0 0 10px var(--today-orb-color, var(--today-ring)),
+    0 0 18px var(--today-orb-color, var(--today-ring));
+  animation: todayBreath 3s ease-in-out infinite;
+}
+
+.dayCell.today::before {
+  animation-delay: -1.5s;
+  opacity: 0.45;
+}
+
+@keyframes todayBreath {
+  0%, 100% {
+    opacity: 0.6;
+    transform: translateX(-50%) scale(1);
+    box-shadow:
+      0 0 10px var(--today-orb-color, var(--today-ring)),
+      0 0 18px var(--today-orb-color, var(--today-ring));
+  }
+  50% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1.8);
+    box-shadow:
+      0 0 16px var(--today-orb-color, var(--today-ring)),
+      0 0 30px var(--today-orb-color, var(--today-ring));
+  }
+}
+
+[data-theme="dark"] .dayCell.today {
+  background: radial-gradient(circle at center, rgba(14, 165, 233, 0.15) 0%, transparent 70%);
+}
+
+[data-theme="dark"] .dayCell.today::after {
+  box-shadow:
+    0 0 14px var(--today-orb-color, var(--today-ring)),
+    0 0 24px var(--today-orb-color, var(--today-ring)),
+    0 0 24px var(--today-orb-color, var(--today-ring));
+}
+
+[data-theme="dark"] .dayCell.today::before {
+  box-shadow:
+    0 0 14px var(--today-orb-color, var(--today-ring)),
+    0 0 24px var(--today-orb-color, var(--today-ring)),
+    0 0 24px var(--today-orb-color, var(--today-ring));
+}
+
+@keyframes todayPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.4); }
+}
+.dayCell.rangeStart {
+  background: var(--accent);
+  color: white;
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+  font-weight: 700;
+}
+
+.dayCell.rangeEnd {
+  background: var(--accent);
+  color: white;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  font-weight: 700;
+}
+
+.dayCell.rangeStart.rangeEnd {
+  border-radius: var(--radius-sm);
+}
+
+.dayCell.inRange {
+  background: var(--range-bg);
+  border-radius: 0;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.dayCell.inRange:hover {
+  background: var(--accent-light);
+}
+.dayCell.tentativeStart {
+  background: var(--accent);
+  color: white;
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+  font-weight: 700;
+  opacity: 0.7;
+}
+
+.dayCell.tentativeEnd {
+  background: var(--accent);
+  color: white;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  font-weight: 700;
+  opacity: 0.7;
+}
+
+.dayCell.tentativeRange {
+  background: var(--range-bg);
+  border-radius: 0;
+  color: var(--accent);
+  opacity: 0.55;
+}
+.dayCell.selectingEnd {
+  cursor: crosshair;
+}
+.dayNumber {
+  position: relative;
+  z-index: 2;
+}
+
+.todayTimeIndicator {
+  position: absolute;
+  bottom: 2px;
+  right: 3px;
+  font-size: 0.46rem;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  font-weight: 700;
+  color: var(--accent);
+  background: rgba(255, 255, 255, 0.86);
+  border-radius: 999px;
+  padding: 2px 5px;
+  border: 1px solid rgba(14, 165, 233, 0.2);
+  z-index: 3;
+}
+
+[data-theme="dark"] .todayTimeIndicator {
+  background: rgba(10, 18, 37, 0.76);
+  border-color: rgba(96, 165, 250, 0.35);
+}
+.dayClickRipple {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  opacity: 0.3;
+  pointer-events: none;
+  z-index: 1;
+}
+.dayCell.expanded {
+  position: absolute;
+  z-index: 100;
+  grid-column: span 3 !important;
+  grid-row: span 2 !important;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.3);
+  background: var(--bg-calendar);
+  background: rgba(var(--bg-calendar-rgb), 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  backdrop-filter: blur(20px) saturate(1.25);
+  transform: scale(1.05);
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+[data-theme="dark"] .dayCell.expanded {
+  background: rgba(22, 24, 46, 0.6);
+  border-color: rgba(147, 197, 253, 0.18);
+}
+
+.dayCellDimmed {
+  opacity: 0.32;
+  filter: saturate(0.78);
+  transition: opacity 0.24s ease, filter 0.24s ease;
+}
+
+.dayDetailExpanded {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 12px 16px;
+  gap: 8px;
+}
+
+.dayDetailHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.dayDetailDate {
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.dayDetailNumber {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.dayDetailHoliday {
+  font-size: 0.75rem;
+  color: var(--accent);
+  background: var(--accent-light);
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+}
+
+.dayDetailClose {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: none;
+  background: var(--bg-muted);
+  cursor: pointer;
+  font-size: 0.7rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.dayDetailClose:hover {
+  background: var(--border);
+}
+.floatingMiniCalendar {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.88);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.2);
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+}
+
+[data-theme="dark"] .floatingMiniCalendar {
+  background: rgba(22, 24, 46, 0.84);
+}
+
+.floatingMiniCalendar:hover {
+  transform: scale(1.05);
+  box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.25);
+}
+
+.miniCalendarHeader {
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+  text-align: center;
+  letter-spacing: 0.5px;
+}
+
+.miniCalendarGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1px;
+}
+
+.miniCalendarDay {
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.55rem;
+  border-radius: 2px;
+  color: var(--text-secondary);
+}
+
+.miniCalendarOtherMonth {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.miniCalendarToday {
+  background: var(--accent);
+  color: white;
+  font-weight: 700;
+  border-radius: 50%;
+  animation: miniBreathe 3.5s ease-in-out infinite;
+}
+
+@keyframes miniBreathe {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.42); }
+  50% { box-shadow: 0 0 0 3px rgba(14, 165, 233, 0); }
+}
+.selectionHint {
+  min-height: 18px;
+  margin-bottom: 2px;
+}
+
+.selectionHintText {
+  font-family: var(--font-body);
+  font-size: 0.65rem;
+  color: var(--accent);
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  animation: hintPulse 2s ease-in-out infinite;
+}
+
+@keyframes hintPulse {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+.holidayBadge {
+  position: absolute;
+  top: 1px;
+  right: 2px;
+  font-size: 0.55rem;
+  line-height: 1;
+  transform-origin: center center;
+  will-change: transform;
+  pointer-events: none;
+}
+
+.holidayTooltip {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translate(-50%, -8px);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 0.65rem;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  box-shadow: var(--shadow-md);
+  z-index: 100;
+  pointer-events: none;
+  opacity: 0;
+  transition:
+    opacity 190ms ease,
+    transform 360ms cubic-bezier(0.2, 1.15, 0.34, 1);
+  border: 1px solid var(--border);
+}
+
+.holidayTooltipBelow {
+  top: calc(100% + 6px);
+  bottom: auto;
+  transform: translate(-50%, 8px);
+}
+
+.dayCell:hover .holidayTooltip {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+.monthNav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 24px;
+  border-top: 1px solid var(--border);
+  background: var(--bg-calendar);
+}
+
+.navButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  position: relative;
+}
+
+.navButton:hover {
+  background: var(--accent-light);
+  color: var(--accent);
+}
+
+.navButton:active {
+  color: var(--accent);
+}
+
+.navButtonContent {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  will-change: transform;
+}
+
+.todayButton {
+  padding: 6px 16px;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: var(--radius-xl);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.todayButton:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-light);
+}
+
+.monthNavLabel {
+  font-family: var(--font-display);
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: 0.5px;
+}
+.themeToggle {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  width: 44px;
+  height: 44px;
+  border: 1.5px solid var(--border);
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+  z-index: 100;
+  box-shadow: var(--shadow-sm);
+}
+
+.themeToggle:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  transform: scale(1.1) rotate(15deg);
+  box-shadow: var(--shadow-md);
+}
+
+.themeMorphWrap {
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transform-origin: 50% 50%;
+  will-change: transform;
+}
+
+.themeMorphIcon {
+  width: 20px;
+  height: 20px;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.themeFxLayer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10003;
+}
+
+.themeSparkle {
+  position: fixed;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 1) 0%, rgba(147, 197, 253, 0.75) 58%, rgba(147, 197, 253, 0) 100%);
+  box-shadow: 0 0 10px rgba(147, 197, 253, 0.85);
+  pointer-events: none;
+}
+
+.themeWipe {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10002;
+  opacity: 0;
+}
+
+.themeWipeDark {
+  background: #0f0f1a;
+}
+
+.themeWipeLight {
+  background: #f8f6f3;
+}
+
+.nightModeSuggestion {
+  position: fixed;
+  top: 24px;
+  right: 76px;
+  z-index: 101;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(96, 165, 250, 0.35);
+  background: rgba(8, 18, 36, 0.86);
+  color: #dbeafe;
+  backdrop-filter: blur(16px) saturate(1.8);
+  box-shadow: 0 8px 24px rgba(2, 6, 23, 0.35);
+  will-change: transform, opacity;
+}
+
+.nightModeText {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+}
+
+.nightModeAction,
+.nightModeDismiss {
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.nightModeAction {
+  background: rgba(59, 130, 246, 0.24);
+  color: #dbeafe;
+  padding: 4px 10px;
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.nightModeAction:hover {
+  background: rgba(59, 130, 246, 0.38);
+}
+
+.nightModeDismiss {
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: #93c5fd;
+}
+
+.nightModeDismiss:hover {
+  background: rgba(147, 197, 253, 0.16);
+}
+
+.nightModeIcon {
+  animation: moonFloat 3s ease-in-out infinite;
+}
+
+@keyframes moonFloat {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-2px) rotate(3deg);
+  }
+}
+.clearRange {
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.65rem;
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.clearRange:hover {
+  border-color: #ef4444;
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.05);
+}
+.mobileNotesToggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px;
+  border: none;
+  border-top: 1px solid var(--border);
+  background: var(--bg-notes);
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  width: 100%;
+}
+
+.mobileNotesToggle:hover {
+  color: var(--accent);
+  background: var(--accent-light);
+}
+
+.mobileNotesContent {
+  overflow: hidden;
+}
+@media (max-width: 768px) {
+  .calendarWrapper {
+    padding: 16px 8px;
+    align-items: flex-start;
+  }
+
+  .monthBackdrop {
+    inset: -20%;
+    filter: blur(18px) saturate(1.05);
+    opacity: 0.32;
+  }
+
+  .particle {
+    opacity: 0.72;
+  }
+
+  .heroSection {
+    height: 240px;
+  }
+
+  .calendarHanger {
+    width: 62px;
+    height: 36px;
+    top: 5px;
+  }
+
+  .hangerRing {
+    width: 42px;
+    height: 24px;
+    border-width: 4px;
+  }
+
+  .hangerPin {
+    width: 10px;
+    height: 10px;
+    top: 7px;
+  }
+
+  .heroMonthName {
+    font-size: 1.9rem;
+    letter-spacing: 2px;
+  }
+
+  .heroYear {
+    font-size: 1.1rem;
+  }
+
+  .heroMonthLabel {
+    bottom: 28px;
+    right: 20px;
+  }
+
+  .contentArea {
+    grid-template-columns: 1fr;
+  }
+
+  .notesPanel {
+    display: flex;
+    border-right: none;
+    border-top: 1px solid var(--border);
+    max-height: 200px;
+    background: rgba(var(--bg-notes-rgb), 0.85);
+    backdrop-filter: blur(20px) saturate(1.25);
+    transform-origin: top center;
+    transform: scaleY(0);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .notesPanel.mobileOpen {
+    transform: scaleY(1);
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .mobileNotesToggle {
+    display: flex;
+  }
+
+  .calendarSection {
+    padding: 12px 12px 16px;
+  }
+
+  .dayCell {
+    font-size: 0.8rem;
+  }
+
+  .monthNav {
+    padding: 10px 16px;
+  }
+
+  .themeToggle {
+    top: 12px;
+    right: 12px;
+    width: 38px;
+    height: 38px;
+  }
+
+  .nightModeSuggestion {
+    top: 58px;
+    right: 12px;
+    padding: 7px 9px;
+    gap: 6px;
+  }
+
+  .floatingMiniCalendar {
+    bottom: 14px;
+    right: 12px;
+    padding: 10px;
+  }
+
+  .spiralLoop {
+    width: 14px;
+    height: 14px;
+  }
+
+  .spiralBinding {
+    height: 22px;
+    gap: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .outerParticles {
+    opacity: 0.65;
+  }
+
+  .heroSection {
+    height: 200px;
+  }
+
+  .heroMonthName {
+    font-size: 1.5rem;
+  }
+
+  .heroYear {
+    font-size: 0.95rem;
+  }
+
+  .dayCell {
+    font-size: 0.75rem;
+  }
+
+  .weekdayCell {
+    font-size: 0.6rem;
+  }
+
+  .nightModeText {
+    font-size: 0.58rem;
+  }
+
+  .miniCalendarDay {
+    width: 14px;
+    height: 14px;
+    font-size: 0.5rem;
+  }
+}
+.rangeInfo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 20px;
+  background: rgba(14, 165, 233, 0.06);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  font-size: 0.75rem;
+  color: var(--accent);
+  font-weight: 500;
+  border-top: 1px solid var(--range-border);
+}
+
+.rangeInfoText {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.monthDescription {
+  font-family: var(--font-body);
+  font-size: 0.66rem;
+  color: var(--text-muted);
+  font-style: italic;
+  letter-spacing: 0.5px;
+}
+.heroChar {
+  display: inline-block;
+  will-change: transform, opacity, margin;
+  transform-origin: center bottom;
+}
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .particle {
+    animation: none !important;
+    display: none;
+  }
+
+  .atmosphereLayer {
+    animation: none !important;
+  }
+
+  .dayCell {
+    transition: none !important;
+  }
+
+  .dayCellShimmer,
+  .miniCalendarToday,
+  .calendarSwing {
+    animation: none !important;
+  }
+
+  .navButton:hover,
+  .themeToggle:hover {
+    transform: none !important;
+  }
+
+  .dayCell.today::before,
+  .dayCell.today::after {
+    animation: none !important;
+  }
+
+  .selectionHintText {
+    animation: none !important;
+    opacity: 1;
+  }
+}
