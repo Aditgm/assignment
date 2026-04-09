@@ -2,7 +2,7 @@
 
 An award-winning, interactive wall calendar component built with **Next.js 15**, **GSAP**, and **CSS Modules**. Features day range selection, integrated notes, theme switching, and premium animations.
 
-![Wall Calendar Preview](/images/months/april.png)
+![Wall Calendar Preview]([/images/months/april.png](https://github.com/Aditgm/assignment/blob/master/public/images/months/april.png))
 
 ## ✨ Features
 
